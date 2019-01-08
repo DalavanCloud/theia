@@ -10,6 +10,7 @@
     }
   },
   "dependencies": {
+    "@theia/branding": "^0.3.19",
     "@theia/callhierarchy": "^0.3.19",
     "@theia/console": "^0.3.19",
     "@theia/core": "^0.3.19",

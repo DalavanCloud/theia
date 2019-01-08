@@ -15,6 +15,7 @@
     "`@theia/debug`, `@theia/debug-nodejs` and `@theia/java-debug` are removed due to https://github.com/theia-ide/theia/issues/3716"
   ],
   "dependencies": {
+    "@theia/branding": "^0.3.19",
     "@theia/callhierarchy": "^0.3.19",
     "@theia/console": "^0.3.19",
     "@theia/core": "^0.3.19",

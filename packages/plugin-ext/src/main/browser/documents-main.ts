@@ -53,6 +53,12 @@ export class DocumentsMainImpl implements DocumentsMain {
         this.toDispose.push(modelService.onModelSaved(m => {
             this.proxy.$acceptModelSaved(m.textEditorModel.uri);
         }));
+        this.toDispose.push(modelService.onModelWillSaved(onWillSaveModelEvent => {
+            onWillSaveModelEvent.waitUntil(new Promise<monaco.editor.IIdentifiedSingleEditOperation[]>(async resolve => {
+                await this.proxy.$acceptModelWillSave(onWillSaveModelEvent.model.textEditorModel.uri, onWillSaveModelEvent.reason);
+                resolve([]); // todo apply edits...
+            }));
+        }));
         this.toDispose.push(modelService.onModelDirtyChanged(m => {
             this.proxy.$acceptDirtyStateChanged(m.textEditorModel.uri, m.dirty);
         }));

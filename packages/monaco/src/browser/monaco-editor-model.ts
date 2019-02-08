@@ -64,7 +64,7 @@ export class MonacoEditorModel implements ITextEditorModel, TextEditorDocument {
         this.toDispose.push(this.toDisposeOnAutoSave);
         this.toDispose.push(this.onDidChangeContentEmitter);
         this.toDispose.push(this.onDidSaveModelEmitter);
-        this.toDispose.push(this.onWillSaveModelEmitter);
+        this.toDispose.push(this.onWillSaveModelEmitter); // Todo
         this.toDispose.push(this.onDirtyChangedEmitter);
         this.resolveModel = resource.readContents().then(content => this.initialize(content));
     }
@@ -346,7 +346,7 @@ export class MonacoEditorModel implements ITextEditorModel, TextEditorDocument {
             reject(new Error('onWillSave listener loop timeout'));
         }, 1000));
 
-        const firing = this.onWillSaveModelEmitter.sequence(async listener => {
+        const firing = this.onWillSaveModelEmitter.sequence(async listener => { // todo
             if (shouldStop()) {
                 return false;
             }

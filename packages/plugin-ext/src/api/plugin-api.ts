@@ -699,6 +699,7 @@ export interface ModelChangedEvent {
 export interface DocumentsExt {
     $acceptModelModeChanged(startUrl: UriComponents, oldModeId: string, newModeId: string): void;
     $acceptModelSaved(strUrl: UriComponents): void;
+    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): void; // todo apply reason
     $acceptDirtyStateChanged(strUrl: UriComponents, isDirty: boolean): void;
     $acceptModelChanged(strUrl: UriComponents, e: ModelChangedEvent, isDirty: boolean): void;
 }

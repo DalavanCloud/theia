@@ -31,11 +31,13 @@ export class DocumentsExtImpl implements DocumentsExt {
     private _onDidRemoveDocument = new Emitter<theia.TextDocument>();
     private _onDidChangeDocument = new Emitter<theia.TextDocumentChangeEvent>();
     private _onDidSaveTextDocument = new Emitter<theia.TextDocument>();
+    private _onWillSaveTextDocument = new Emitter<theia.TextDocumentWillSaveEvent>();
 
     readonly onDidAddDocument: Event<theia.TextDocument> = this._onDidAddDocument.event;
     readonly onDidRemoveDocument: Event<theia.TextDocument> = this._onDidRemoveDocument.event;
     readonly onDidChangeDocument: Event<theia.TextDocumentChangeEvent> = this._onDidChangeDocument.event;
     readonly onDidSaveTextDocument: Event<theia.TextDocument> = this._onDidSaveTextDocument.event;
+    readonly onWillSaveTextDocument: Event<theia.TextDocumentWillSaveEvent> = this._onWillSaveTextDocument.event;
 
     private proxy: DocumentsMain;
     private loadingDocuments = new Map<string, Promise<DocumentDataExt | undefined>>();
@@ -76,6 +78,21 @@ export class DocumentsExtImpl implements DocumentsExt {
         this.$acceptDirtyStateChanged(strUrl, false);
         if (data) {
             this._onDidSaveTextDocument.fire(data.document);
+        }
+    }
+    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): void { // reason: theia.TextDocumentSaveReason
+        const uri = URI.revive(strUrl);
+        const uriString = uri.toString();
+        const data = this.editorsAndDocuments.getDocument(uriString);
+        if (data) {
+            const onWillSaveEvent: theia.TextDocumentWillSaveEvent = {
+                document: data.document,
+                reason: reason,
+                waitUntil: (edit: PromiseLike<theia.TextEdit[]>) => { // todo some: any | theia.TextEdit
+                    console.log('test');
+                }
+            };
+            this._onWillSaveTextDocument.fire(onWillSaveEvent);
         }
     }
     $acceptDirtyStateChanged(strUrl: UriComponents, isDirty: boolean): void {

@@ -148,7 +148,7 @@ export class MonacoEditorProvider {
                 this.updateMonacoEditorOptions(editor, event);
             }
         }));
-        editor.document.onWillSaveModel(event => {
+        editor.document.onWillSaveModel(event => { // todo
             event.waitUntil(new Promise<monaco.editor.IIdentifiedSingleEditOperation[]>(async resolve => {
                 if (event.reason === TextDocumentSaveReason.Manual && this.editorPreferences['editor.formatOnSave']) {
                     await this.commandServiceFactory().executeCommand('monaco.editor.action.formatDocument');

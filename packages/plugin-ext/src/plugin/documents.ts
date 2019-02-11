@@ -23,7 +23,8 @@ import { DocumentDataExt, setWordDefinitionFor } from './document-data';
 import { EditorsAndDocumentsExtImpl } from './editors-and-documents';
 import * as Converter from './type-converters';
 import { DisposableCollection } from '@theia/core/lib/common/disposable';
-import { Range, TextDocumentShowOptions, TextEdit } from '../api/model';
+import { Range, TextDocumentShowOptions } from '../api/model';
+import { TextEdit } from './types-impl';
 
 export class DocumentsExtImpl implements DocumentsExt {
     private toDispose = new DisposableCollection();
@@ -89,17 +90,26 @@ export class DocumentsExtImpl implements DocumentsExt {
                 const onWillSaveEvent: theia.TextDocumentWillSaveEvent = {
                     document: data.document,
                     reason: reason,
-                    waitUntil: async (editsPromise: PromiseLike<theia.TextEdit[]>) => { // todo some: any | theia.TextEdit
-                        const edits: theia.TextEdit[] = await editsPromise;
-                        console.log('Got api edits', edits);
-                        const editOperations: TextEdit[] = edits.map(textEdit => Converter.fromTextEdit(textEdit));
-                        resolve(editOperations);
+                    /* tslint:disable:no-any */
+                    waitUntil: async (editsPromise: PromiseLike<theia.TextEdit[] | any>) => {
+                        const editsObjs = await editsPromise;
+                        if (this.isTextEditArray(editsObjs)) {
+                            const editOperations: SingleEditOperation[] = (editsObjs as theia.TextEdit[]).map(textEdit => Converter.fromTextEdit(textEdit));
+                            resolve(editOperations);
+                        } else {
+                            resolve(editsObjs);
+                        }
                     }
                 };
                 this._onWillSaveTextDocument.fire(onWillSaveEvent);
             }
         });
     }
+
+    isTextEditArray(obj: any): obj is theia.TextEdit[] {
+        return Array.isArray(obj) && obj.every((elem: any) => TextEdit.isTextEdit(elem));
+    }
+
     $acceptDirtyStateChanged(strUrl: UriComponents, isDirty: boolean): void {
         const uri = URI.revive(strUrl);
         const uriString = uri.toString();

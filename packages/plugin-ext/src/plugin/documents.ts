@@ -24,7 +24,6 @@ import { EditorsAndDocumentsExtImpl } from './editors-and-documents';
 import * as Converter from './type-converters';
 import { DisposableCollection } from '@theia/core/lib/common/disposable';
 import { Range, TextDocumentShowOptions, TextEdit } from '../api/model';
-import { fromRange } from './type-converters';
 
 export class DocumentsExtImpl implements DocumentsExt {
     private toDispose = new DisposableCollection();
@@ -93,17 +92,8 @@ export class DocumentsExtImpl implements DocumentsExt {
                     waitUntil: async (editsPromise: PromiseLike<theia.TextEdit[]>) => { // todo some: any | theia.TextEdit
                         const edits: theia.TextEdit[] = await editsPromise;
                         console.log('Got api edits', edits);
-                        const editDtos: TextEdit[] = edits.map(apiEdit => {
-                            const editDto: TextEdit = {
-                                text: apiEdit.newText,
-                                range: fromRange(apiEdit.range)!,
-                                // eol: apiEdit.newEol // todo what about eol... and operations inside textEdit?
-                            };
-                            console.log('Send dto edits', edits);
-
-                            return editDto;
-                        });
-                        resolve(editDtos);
+                        const editOperations: TextEdit[] = edits.map(textEdit => Converter.fromTextEdit(textEdit));
+                        resolve(editOperations);
                     }
                 };
                 this._onWillSaveTextDocument.fire(onWillSaveEvent);

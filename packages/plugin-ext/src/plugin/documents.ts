@@ -13,7 +13,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
-import { DocumentsExt, ModelChangedEvent, PLUGIN_RPC_CONTEXT, DocumentsMain } from '../api/plugin-api';
+import { DocumentsExt, ModelChangedEvent, PLUGIN_RPC_CONTEXT, DocumentsMain, SingleEditOperation } from '../api/plugin-api';
 import URI from 'vscode-uri';
 import { UriComponents } from '../common/uri-components';
 import { RPCProtocol } from '../api/rpc-protocol';
@@ -81,8 +81,8 @@ export class DocumentsExtImpl implements DocumentsExt {
             this._onDidSaveTextDocument.fire(data.document);
         }
     }
-    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): Promise<TextEdit[]> {
-        return new Promise<TextEdit[]>((resolve, reject) => {
+    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): Promise<SingleEditOperation[]> {
+        return new Promise<SingleEditOperation[]>((resolve, reject) => {
             const uri = URI.revive(strUrl);
             const uriString = uri.toString();
             const data = this.editorsAndDocuments.getDocument(uriString);

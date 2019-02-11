@@ -26,10 +26,10 @@ import URI from '@theia/core/lib/common/uri';
 import CodeURI from 'vscode-uri';
 import { ApplicationShell, OpenerOptions, Saveable } from '@theia/core/lib/browser';
 import { TextDocumentShowOptions } from '../../api/model';
-import { Range, TextEdit } from 'vscode-languageserver-types';
+import { Range } from 'vscode-languageserver-types';
 import { OpenerService } from '@theia/core/lib/browser/opener-service';
 import { ViewColumn } from '../../plugin/types-impl';
-import { ProtocolToMonacoConverter } from 'monaco-languageclient';
+// import { ProtocolToMonacoConverter } from 'monaco-languageclient';
 
 export class DocumentsMainImpl implements DocumentsMain {
 
@@ -44,7 +44,7 @@ export class DocumentsMainImpl implements DocumentsMain {
         rpc: RPCProtocol,
         private editorManger: EditorManager,
         private openerService: OpenerService,
-        private readonly p2m: ProtocolToMonacoConverter,
+        // private readonly p2m: ProtocolToMonacoConverter,
     ) {
         this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.DOCUMENTS_EXT);
 
@@ -57,29 +57,15 @@ export class DocumentsMainImpl implements DocumentsMain {
         }));
         this.toDispose.push(modelService.onModelWillSaved(onWillSaveModelEvent => {
             onWillSaveModelEvent.waitUntil(new Promise<monaco.editor.IIdentifiedSingleEditOperation[]>(async resolve => {
-                const textEdits = await this.proxy.$acceptModelWillSave(onWillSaveModelEvent.model.textEditorModel.uri, onWillSaveModelEvent.reason);
-                console.log('edits to apply', textEdits);
-                const monacoEdits = textEdits.map(editDto => {
-                    const monacoEdit: TextEdit = {
-                        newText: editDto.text,
-                        range: {
-                            start: {
-                                line: editDto.range.startLineNumber - 1,
-                                character: editDto.range.startColumn - 1
-                            },
-                            end: {
-                                line: editDto.range.endLineNumber - 1,
-                                character: editDto.range.endColumn - 1
-                            }
-                        }
-                    };
-                    return monacoEdit;
-                });
-                console.log('Monaco edits to apply', monacoEdits);
-                this.p2m.asRange()
-                const result = this.p2m.asTextEdits(monacoEdits).map(edit => edit as monaco.editor.IIdentifiedSingleEditOperation);
-                console.log(result);
-                resolve(result);
+                const edits = await this.proxy.$acceptModelWillSave(onWillSaveModelEvent.model.textEditorModel.uri, onWillSaveModelEvent.reason);
+                console.log('edits to apply', edits);
+                const transformedEdits = edits.map((edit): monaco.editor.IIdentifiedSingleEditOperation =>
+                ({
+                    range: monaco.Range.lift(edit.range),
+                    text: edit.text!,
+                    forceMoveMarkers: edit.forceMoveMarkers
+                }));
+                resolve(transformedEdits);
             }));
         }));
         this.toDispose.push(modelService.onModelDirtyChanged(m => {

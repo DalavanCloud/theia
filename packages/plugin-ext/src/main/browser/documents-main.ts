@@ -29,6 +29,7 @@ import { TextDocumentShowOptions } from '../../api/model';
 import { Range } from 'vscode-languageserver-types';
 import { OpenerService } from '@theia/core/lib/browser/opener-service';
 import { ViewColumn } from '../../plugin/types-impl';
+import { ProtocolToMonacoConverter } from 'monaco-languageclient';
 
 export class DocumentsMainImpl implements DocumentsMain {
 
@@ -42,7 +43,8 @@ export class DocumentsMainImpl implements DocumentsMain {
         modelService: EditorModelService,
         rpc: RPCProtocol,
         private editorManger: EditorManager,
-        private openerService: OpenerService
+        private openerService: OpenerService,
+        private readonly p2m: ProtocolToMonacoConverter,
     ) {
         this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.DOCUMENTS_EXT);
 
@@ -55,8 +57,9 @@ export class DocumentsMainImpl implements DocumentsMain {
         }));
         this.toDispose.push(modelService.onModelWillSaved(onWillSaveModelEvent => {
             onWillSaveModelEvent.waitUntil(new Promise<monaco.editor.IIdentifiedSingleEditOperation[]>(async resolve => {
-                await this.proxy.$acceptModelWillSave(onWillSaveModelEvent.model.textEditorModel.uri, onWillSaveModelEvent.reason);
-                resolve([]); // todo apply edits...
+                const textEdits = await this.proxy.$acceptModelWillSave(onWillSaveModelEvent.model.textEditorModel.uri, onWillSaveModelEvent.reason);
+                console.log('edits', textEdits);
+                resolve(this.p2m.asTextEdits(textEdits).map(edit => edit as monaco.editor.IIdentifiedSingleEditOperation));
             }));
         }));
         this.toDispose.push(modelService.onModelDirtyChanged(m => {

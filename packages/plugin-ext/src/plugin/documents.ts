@@ -80,20 +80,23 @@ export class DocumentsExtImpl implements DocumentsExt {
             this._onDidSaveTextDocument.fire(data.document);
         }
     }
-    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): void { // reason: theia.TextDocumentSaveReason
-        const uri = URI.revive(strUrl);
-        const uriString = uri.toString();
-        const data = this.editorsAndDocuments.getDocument(uriString);
-        if (data) {
-            const onWillSaveEvent: theia.TextDocumentWillSaveEvent = {
-                document: data.document,
-                reason: reason,
-                waitUntil: (edit: PromiseLike<theia.TextEdit[]>) => { // todo some: any | theia.TextEdit
-                    console.log('test');
-                }
-            };
-            this._onWillSaveTextDocument.fire(onWillSaveEvent);
-        }
+    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): Promise<theia.TextEdit[]> {
+        return new Promise<theia.TextEdit[]>((resolve, reject) => {
+            const uri = URI.revive(strUrl);
+            const uriString = uri.toString();
+            const data = this.editorsAndDocuments.getDocument(uriString);
+            if (data) {
+                const onWillSaveEvent: theia.TextDocumentWillSaveEvent = {
+                    document: data.document,
+                    reason: reason,
+                    waitUntil: (edits: PromiseLike<theia.TextEdit[]>) => { // todo some: any | theia.TextEdit
+                        console.log('Send edits', edits);
+                        resolve(edits);
+                    }
+                };
+                this._onWillSaveTextDocument.fire(onWillSaveEvent);
+            }
+        });
     }
     $acceptDirtyStateChanged(strUrl: UriComponents, isDirty: boolean): void {
         const uri = URI.revive(strUrl);

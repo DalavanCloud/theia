@@ -23,7 +23,8 @@ import { DocumentDataExt, setWordDefinitionFor } from './document-data';
 import { EditorsAndDocumentsExtImpl } from './editors-and-documents';
 import * as Converter from './type-converters';
 import { DisposableCollection } from '@theia/core/lib/common/disposable';
-import { Range, TextDocumentShowOptions } from '../api/model';
+import { Range, TextDocumentShowOptions, TextEdit } from '../api/model';
+import { fromRange } from './type-converters';
 
 export class DocumentsExtImpl implements DocumentsExt {
     private toDispose = new DisposableCollection();
@@ -80,8 +81,8 @@ export class DocumentsExtImpl implements DocumentsExt {
             this._onDidSaveTextDocument.fire(data.document);
         }
     }
-    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): Promise<theia.TextEdit[]> {
-        return new Promise<theia.TextEdit[]>((resolve, reject) => {
+    $acceptModelWillSave(strUrl: UriComponents, reason: theia.TextDocumentSaveReason): Promise<TextEdit[]> {
+        return new Promise<TextEdit[]>((resolve, reject) => {
             const uri = URI.revive(strUrl);
             const uriString = uri.toString();
             const data = this.editorsAndDocuments.getDocument(uriString);
@@ -89,9 +90,20 @@ export class DocumentsExtImpl implements DocumentsExt {
                 const onWillSaveEvent: theia.TextDocumentWillSaveEvent = {
                     document: data.document,
                     reason: reason,
-                    waitUntil: (edits: PromiseLike<theia.TextEdit[]>) => { // todo some: any | theia.TextEdit
-                        console.log('Send edits', edits);
-                        resolve(edits);
+                    waitUntil: async (editsPromise: PromiseLike<theia.TextEdit[]>) => { // todo some: any | theia.TextEdit
+                        const edits: theia.TextEdit[] = await editsPromise;
+                        console.log('Got api edits', edits);
+                        const editDtos: TextEdit[] = edits.map(apiEdit => {
+                            const editDto: TextEdit = {
+                                text: apiEdit.newText,
+                                range: fromRange(apiEdit.range)!,
+                                // eol: apiEdit.newEol // todo what about eol... and operations inside textEdit?
+                            };
+                            console.log('Send dto edits', edits);
+
+                            return editDto;
+                        });
+                        resolve(editDtos);
                     }
                 };
                 this._onWillSaveTextDocument.fire(onWillSaveEvent);

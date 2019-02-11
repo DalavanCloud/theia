@@ -26,7 +26,7 @@ import URI from '@theia/core/lib/common/uri';
 import CodeURI from 'vscode-uri';
 import { ApplicationShell, OpenerOptions, Saveable } from '@theia/core/lib/browser';
 import { TextDocumentShowOptions } from '../../api/model';
-import { Range } from 'vscode-languageserver-types';
+import { Range, TextEdit } from 'vscode-languageserver-types';
 import { OpenerService } from '@theia/core/lib/browser/opener-service';
 import { ViewColumn } from '../../plugin/types-impl';
 import { ProtocolToMonacoConverter } from 'monaco-languageclient';
@@ -58,8 +58,28 @@ export class DocumentsMainImpl implements DocumentsMain {
         this.toDispose.push(modelService.onModelWillSaved(onWillSaveModelEvent => {
             onWillSaveModelEvent.waitUntil(new Promise<monaco.editor.IIdentifiedSingleEditOperation[]>(async resolve => {
                 const textEdits = await this.proxy.$acceptModelWillSave(onWillSaveModelEvent.model.textEditorModel.uri, onWillSaveModelEvent.reason);
-                console.log('edits', textEdits);
-                resolve(this.p2m.asTextEdits(textEdits).map(edit => edit as monaco.editor.IIdentifiedSingleEditOperation));
+                console.log('edits to apply', textEdits);
+                const monacoEdits = textEdits.map(editDto => {
+                    const monacoEdit: TextEdit = {
+                        newText: editDto.text,
+                        range: {
+                            start: {
+                                line: editDto.range.startLineNumber - 1,
+                                character: editDto.range.startColumn - 1
+                            },
+                            end: {
+                                line: editDto.range.endLineNumber - 1,
+                                character: editDto.range.endColumn - 1
+                            }
+                        }
+                    };
+                    return monacoEdit;
+                });
+                console.log('Monaco edits to apply', monacoEdits);
+                this.p2m.asRange()
+                const result = this.p2m.asTextEdits(monacoEdits).map(edit => edit as monaco.editor.IIdentifiedSingleEditOperation);
+                console.log(result);
+                resolve(result);
             }));
         }));
         this.toDispose.push(modelService.onModelDirtyChanged(m => {

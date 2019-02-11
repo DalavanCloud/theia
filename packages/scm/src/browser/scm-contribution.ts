@@ -14,13 +14,36 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 import { inject, injectable } from 'inversify';
-import { FrontendApplicationContribution, StatusBar, StatusBarAlignment, StatusBarEntry } from '@theia/core/lib/browser';
+import {
+    AbstractViewContribution,
+    FrontendApplicationContribution,
+    StatusBar,
+    StatusBarAlignment,
+    StatusBarEntry
+} from '@theia/core/lib/browser';
 import { ScmCommand, ScmService } from '../common/scm';
+import { ScmWidget } from '../browser/scm-widget';
+
+export const SCM_WIDGET_FACTORY_ID = 'scm';
 
 @injectable()
-export class ScmContribution implements FrontendApplicationContribution {
+export class ScmContribution extends AbstractViewContribution<ScmWidget> implements FrontendApplicationContribution {
     @inject(StatusBar) protected readonly statusBar: StatusBar;
     @inject(ScmService) protected readonly scmService: ScmService;
+
+    constructor() {
+        super({
+            widgetId: SCM_WIDGET_FACTORY_ID,
+            widgetName: 'Scm',
+            defaultWidgetOptions: {
+                area: 'left',
+                rank: 300
+            },
+            toggleCommandId: 'scmView:toggle',
+            toggleKeybinding: 'ctrlcmd+shift+q'
+        });
+    }
+
     onStart(): void {
         const refresh = (commands: ScmCommand[]) => {
             commands.forEach(command => {

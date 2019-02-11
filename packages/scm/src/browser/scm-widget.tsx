@@ -13,23 +13,28 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
+import { injectable } from 'inversify';
+import { ReactWidget } from '@theia/core/lib/browser';
+import * as React from 'react';
+import { AlertMessage } from '@theia/core/lib/browser/widgets/alert-message';
 
-import { ContainerModule } from 'inversify';
-import { SCM_WIDGET_FACTORY_ID, ScmContribution } from './scm-contribution';
-import { ScmServiceImpl } from './scm-service-impl';
-import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } from '@theia/core/lib/browser';
-import { ScmService } from '../common/scm';
-import { ScmWidget } from '../browser/scm-widget';
+@injectable()
+export class ScmWidget extends ReactWidget {
 
-export default new ContainerModule(bind => {
-    bind(ScmService).to(ScmServiceImpl).inSingletonScope();
+    constructor() {
+        super();
+        this.id = 'scm';
+        this.title.label = 'Scm';
+        this.title.caption = 'Scm';
+        this.title.iconClass = 'fa extensions-tab-icon';
+        this.addClass('theia-scm');
 
-    bind(ScmWidget).toSelf();
-    bind(WidgetFactory).toDynamicValue(ctx => ({
-        id: SCM_WIDGET_FACTORY_ID,
-        createWidget: () => ctx.container.get(ScmWidget)
-    })).inSingletonScope();
-
-    bindViewContribution(bind, ScmContribution);
-    bind(FrontendApplicationContribution).toService(ScmContribution);
-});
+        this.update();
+    }
+    protected render(): React.ReactNode {
+        return <AlertMessage
+            type='WARNING'
+            header='Version control is not available at this time'
+        />;
+    }
+}

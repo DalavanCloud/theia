@@ -106,6 +106,7 @@ export class MenusContributionPointHandler {
             case 'explorer/context': return [NAVIGATOR_CONTEXT_MENU];
             case 'view/item/context': return [VIEW_ITEM_CONTEXT_MENU];
             case 'debug/callstack/context': return [DebugStackFramesWidget.CONTEXT_MENU, DebugThreadsWidget.CONTEXT_MENU];
+            case 'scm/title': return [];
         }
         return [];
     }

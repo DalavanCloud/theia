@@ -29,7 +29,6 @@ import { TextDocumentShowOptions } from '../../api/model';
 import { Range } from 'vscode-languageserver-types';
 import { OpenerService } from '@theia/core/lib/browser/opener-service';
 import { ViewColumn } from '../../plugin/types-impl';
-// import { ProtocolToMonacoConverter } from 'monaco-languageclient';
 
 export class DocumentsMainImpl implements DocumentsMain {
 
@@ -44,7 +43,6 @@ export class DocumentsMainImpl implements DocumentsMain {
         rpc: RPCProtocol,
         private editorManger: EditorManager,
         private openerService: OpenerService,
-        // private readonly p2m: ProtocolToMonacoConverter,
     ) {
         this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.DOCUMENTS_EXT);
 
